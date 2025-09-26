@@ -10,11 +10,18 @@ contract MintNFT is ERC721{
     uint256 public nextId;
 
     constructor() ERC721("DelTok","DTK") {}
-
-    function mint() external returns(uint256){
+    event Minted(address indexed owner, uint256 tokenId);
+    function mint() external {
         uint256 tokenId = nextId;
         nextId++;
-        return tokenId;
+
+        _safeMint(msg.sender, tokenId);
+        emit Minted(msg.sender, tokenId);
+        
+    }
+
+    function show() external view returns(uint256){
+        return nextId;
     }
 
 }
