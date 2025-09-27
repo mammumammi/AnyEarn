@@ -88,10 +88,10 @@ const config: HardhatUserConfig = {
       url: `https://polygon-amoy.g.alchemy.com/v2/${providerApiKey}`,
       accounts: [deployerPrivateKey],
     },
-    tenderlyVirtual: {
+    virtualcelo: {
       url: process.env.TENDERLY_VIRTUAL_RPC || "https://virtual.celo-sepolia.eu.rpc.tenderly.co/3ab0aa36-60c5-437e-b388-395a6f196b8f",
       chainId: parseInt(process.env.TENDERLY_CHAIN_ID || "11142220"), // set the chain ID you used
-      accounts: [deployerPrivateKey],
+      accounts: ['ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'],
     },
     polygonZkEvm: {
       url: `https://polygonzkevm-mainnet.g.alchemy.com/v2/${providerApiKey}`,
