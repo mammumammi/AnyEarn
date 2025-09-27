@@ -18,22 +18,22 @@
 @plugin "daisyui/theme" {
   name: "light";
 
-  --color-primary: #00ff88;
+  --color-primary: #FF8C00;
   --color-primary-content: #000000;
-  --color-secondary: #00cc6a;
+  --color-secondary: #1E3A8A;
   --color-secondary-content: #ffffff;
-  --color-accent: #00ff88;
+  --color-accent: #FF8C00;
   --color-accent-content: #000000;
-  --color-neutral: #1a1a1a;
+  --color-neutral: #1F2937;
   --color-neutral-content: #ffffff;
   --color-base-100: #ffffff;
-  --color-base-200: #f0f0f0;
-  --color-base-300: #e0e0e0;
+  --color-base-200: #F3F4F6;
+  --color-base-300: #E5E7EB;
   --color-base-content: #000000;
-  --color-info: #00ff88;
-  --color-success: #00ff88;
-  --color-warning: #ffaa00;
-  --color-error: #ff4444;
+  --color-info: #FF8C00;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
 
   --radius-field: 0.5rem;
   --radius-box: 0.75rem;
@@ -43,22 +43,22 @@
 @plugin "daisyui/theme" {
   name: "dark";
 
-  --color-primary: #00ff88;
+  --color-primary: #FF8C00;
   --color-primary-content: #000000;
-  --color-secondary: #00cc6a;
+  --color-secondary: #1E3A8A;
   --color-secondary-content: #ffffff;
-  --color-accent: #00ff88;
+  --color-accent: #FF8C00;
   --color-accent-content: #000000;
   --color-neutral: #000000;
-  --color-neutral-content: #00ff88;
+  --color-neutral-content: #FF8C00;
   --color-base-100: #000000;
-  --color-base-200: #0a0a0a;
-  --color-base-300: #1a1a1a;
+  --color-base-200: #0F172A;
+  --color-base-300: #1E293B;
   --color-base-content: #ffffff;
-  --color-info: #00ff88;
-  --color-success: #00ff88;
-  --color-warning: #ffaa00;
-  --color-error: #ff4444;
+  --color-info: #FF8C00;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
 
   --radius-field: 0.5rem;
   --radius-box: 0.75rem;
@@ -122,51 +122,81 @@
   opacity: 80%;
 }
 
-/* Custom Pitch Black & Green Theme Styles */
+/* Custom Black & Gold Elegance Theme Styles */
 .bg-pitch-black {
   background-color: #000000;
 }
 
-.bg-black-green {
-  background: linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #000000 100%);
+.bg-navy-gradient {
+  background: linear-gradient(135deg, #000000 0%, #0F172A 30%, #1E3A8A 70%, #000000 100%);
 }
 
-.text-green-primary {
-  color: #00ff88;
+.text-orange-primary {
+  color: #FF8C00;
 }
 
-.text-green-secondary {
-  color: #00cc6a;
+.text-navy-secondary {
+  color: #1E3A8A;
 }
 
-.border-green {
-  border-color: #00ff88;
+.border-orange {
+  border-color: #FF8C00;
 }
 
-.bg-green-glow {
-  background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+.border-navy {
+  border-color: #1E3A8A;
 }
 
-.bg-green-glow:hover {
-  box-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+.bg-orange-glow {
+  background: linear-gradient(135deg, #FF8C00 0%, #FFA500 100%);
+  box-shadow: 0 0 20px rgba(255, 140, 0, 0.3);
+}
+
+.bg-orange-glow:hover {
+  box-shadow: 0 0 30px rgba(255, 140, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.bg-navy-glow {
+  background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
+  box-shadow: 0 0 20px rgba(30, 58, 138, 0.3);
+}
+
+.bg-navy-glow:hover {
+  box-shadow: 0 0 30px rgba(30, 58, 138, 0.5);
   transform: translateY(-2px);
 }
 
 .glass-card {
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(0, 255, 136, 0.2);
+  border: 1px solid rgba(255, 140, 0, 0.2);
 }
 
 .glass-card:hover {
-  border-color: rgba(0, 255, 136, 0.4);
+  border-color: rgba(255, 140, 0, 0.4);
   background: rgba(0, 0, 0, 0.9);
 }
 
-.green-glow-text {
-  color: #00ff88;
-  text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+.glass-card-navy {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(30, 58, 138, 0.2);
+}
+
+.glass-card-navy:hover {
+  border-color: rgba(30, 58, 138, 0.4);
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.orange-glow-text {
+  color: #FF8C00;
+  text-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
+}
+
+.navy-glow-text {
+  color: #1E3A8A;
+  text-shadow: 0 0 10px rgba(30, 58, 138, 0.5);
 }
 
 .card-hover {
@@ -175,7 +205,12 @@
 
 .card-hover:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+  box-shadow: 0 10px 30px rgba(255, 140, 0, 0.2);
+}
+
+.card-hover-navy:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(30, 58, 138, 0.2);
 }
 
 /* Custom scrollbar */
@@ -188,10 +223,10 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #00ff88;
+  background: #FF8C00;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #00cc6a;
+  background: #FFA500;
 }
