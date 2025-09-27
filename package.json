@@ -62,6 +62,7 @@
     "@selfxyz/contracts": "^1.2.3",
     "@selfxyz/core": "^1.1.0-beta.6",
     "@selfxyz/qrcode": "^1.0.15",
+    "axios": "^1.12.2",
     "ethers": "^6.15.0",
     "uuid": "^13.0.0"
   }
