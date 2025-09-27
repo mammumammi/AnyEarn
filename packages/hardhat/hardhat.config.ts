@@ -22,6 +22,9 @@ const deployerPrivateKey =
 // If not set, it uses our block explorers default API keys.
 const etherscanApiKey = process.env.ETHERSCAN_V2_API_KEY || "DNXJA8RX2Q3VZ4URQIWP7Z68CJXQZSC6AW";
 
+const CELO_PRIVATE_KEY = process.env.CELO_PRIVATE_KEY || "";
+const CELO_SEPOLIA_RPC = process.env.CELO_SEPOLIA_RPC || "";
+
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
@@ -83,6 +86,11 @@ const config: HardhatUserConfig = {
     },
     polygonAmoy: {
       url: `https://polygon-amoy.g.alchemy.com/v2/${providerApiKey}`,
+      accounts: [deployerPrivateKey],
+    },
+    tenderlyVirtual: {
+      url: process.env.TENDERLY_VIRTUAL_RPC || "https://virtual.celo-sepolia.eu.rpc.tenderly.co/3ab0aa36-60c5-437e-b388-395a6f196b8f",
+      chainId: parseInt(process.env.TENDERLY_CHAIN_ID || "11142220"), // set the chain ID you used
       accounts: [deployerPrivateKey],
     },
     polygonZkEvm: {

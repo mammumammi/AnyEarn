@@ -23,7 +23,10 @@
   },
   "dependencies": {
     "@inquirer/password": "^4.0.2",
-    "@openzeppelin/contracts": "~5.0.2",
+    "@openzeppelin/contracts": "^5.4.0",
+    "@selfxyz/contracts": "^1.2.3",
+    "@selfxyz/core": "^1.1.0-beta.6",
+    "@selfxyz/qrcode": "^1.0.15",
     "@typechain/ethers-v6": "~0.5.1",
     "dotenv": "~16.4.5",
     "envfile": "~7.1.0",

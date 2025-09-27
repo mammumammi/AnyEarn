@@ -58,6 +58,11 @@
     "node": ">=20.18.3"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.4.0"
+    "@openzeppelin/contracts": "^5.4.0",
+    "@selfxyz/contracts": "^1.2.3",
+    "@selfxyz/core": "^1.1.0-beta.6",
+    "@selfxyz/qrcode": "^1.0.15",
+    "ethers": "^6.15.0",
+    "uuid": "^13.0.0"
   }
 }
