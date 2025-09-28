@@ -1,19 +1,35 @@
 // packages/nextjs/utils/customChains.ts
 import { defineChain } from "viem";
 
-export const virtualCelo = defineChain({
-  id: 11142220,
-  name: "Tenderly Sepolia Virtual Testnet",
-  network: "virtualsepolia",
-  nativeCurrency: { name: "Celo", symbol: "CELO", decimals: 18 },
+export const flowEVMTestnet = defineChain({
+  id: 545, // Flow EVM Testnet Chain ID
+  name: "Flow EVM Testnet",
+  network: "flow-evm-testnet",
+  nativeCurrency: {
+    name: "Flow",
+    symbol: "FLOW",
+    decimals: 18,
+  },
   rpcUrls: {
-    default: { http: ["https://virtual.celo-sepolia.eu.rpc.tenderly.co/3ab0aa36-60c5-437e-b388-395a6f196b8f"] },
+    default: {
+      http: ["https://testnet.evm.nodes.onflow.org"], // Flow EVM testnet RPC
+    },
+    public: {
+      http: ["https://testnet.evm.nodes.onflow.org"],
+    },
   },
   blockExplorers: {
-    default: { name: "Tenderly Dashboard", url: "https://dashboard.tenderly.co/" },
+    default: {
+      name: "Flow EVM Testnet Explorer",
+      url: "https://evm-testnet.flowscan.io",
+    },
   },
   testnet: true,
   contracts: {
-    multicall3: { address: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" },
+    multicall3: {
+      // standard multicall contract deployed to Flow EVM testnet
+      address: "0xcA11bde05977b3631167028862bE2a173976CA11",
+      blockCreated: 11,
+    },
   },
 });

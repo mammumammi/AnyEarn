@@ -3,9 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { getUniversalLink } from "@selfxyz/core";
+import { SelfQRcodeWrapper, SelfAppBuilder, type SelfApp } from "@selfxyz/qrcode";
 
 export default function VerificationPage() {
   const { address, isConnected, isConnecting } = useAccount();
+  const [selfApp, setSelfApp] = useState<SelfApp | null>(null);
+  const [universalLink, setUniversalLink] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,6 +19,45 @@ export default function VerificationPage() {
   });
 
   console.log("Wallet state:", { address, isConnected, isConnecting });
+
+  // Initialize SelfCore app when wallet is connected
+  useEffect(() => {
+    if (!isConnected || !address) {
+      setSelfApp(null);
+      setUniversalLink("");
+      return;
+    }
+
+    try {
+      const app = new SelfAppBuilder({
+        version: 2,
+        appName: "AnyEarn",
+        scope: "anyearn-scope",
+        endpoint: "/api/verify",
+        logoBase64: "https://i.postimg.cc/mrmVf9hm/self.png",
+        userId: address,
+        endpointType: "staging_https",
+        userIdType: "hex",
+        userDefinedData: JSON.stringify({
+          walletAddress: address,
+          appName: "AnyEarn",
+          verificationType: "service_verification"
+        }),
+        disclosures: {
+          minimumAge: 18,
+          nationality: true,
+          gender: true,
+        },
+      }).build();
+
+      setSelfApp(app);
+      setUniversalLink(getUniversalLink(app));
+      console.log("SelfCore app initialized successfully");
+    } catch (error) {
+      console.error("Failed to initialize Self app:", error);
+      setError("Failed to initialize SelfCore verification");
+    }
+  }, [address, isConnected]);
 
   const handleVerificationSuccess = async (attestationId: string, discloseOutput?: any) => {
     console.log("Verification successful!", attestationId, discloseOutput);
@@ -31,10 +74,10 @@ export default function VerificationPage() {
     const lastName = discloseOutput?.lastName || "Doe";
 
     try {
-      await writeUserVerificationAsync({
-        functionName: "selfVerify",
-        args: [address, firstName, lastName, attestationId],
-      });
+        await writeUserVerificationAsync({
+          functionName: "selfVerify",
+          args: [firstName, lastName, attestationId],
+        });
       setSuccess(true);
       console.log("User verified and stored on-chain ✅");
     } catch (err) {
@@ -137,40 +180,88 @@ export default function VerificationPage() {
 
           <div className="bg-slate-800 rounded-xl p-8">
             <div className="text-center mb-6">
-              <h2 className="text-2xl font-semibold text-white mb-2">Demo Verification</h2>
-              <p className="text-gray-300">For testing purposes, you can simulate verification</p>
+              <h2 className="text-2xl font-semibold text-white mb-2">SelfCore QR Verification</h2>
+              <p className="text-gray-300">Use the Self app to scan the QR code and verify your identity</p>
             </div>
 
-            <div className="text-center">
-              {loading ? (
-                <div className="flex flex-col items-center space-y-4">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-400"></div>
-                  <p className="text-gray-300">Processing verification...</p>
-                </div>
-              ) : (
-                <button
-                  onClick={() => {
-                    const mockAttestationId = `demo_attestation_${Date.now()}`;
+            {selfApp ? (
+              <div className="flex flex-col items-center space-y-6">
+                <SelfQRcodeWrapper
+                  selfApp={selfApp}
+                  onSuccess={() => {
+                    // For demo purposes, simulate successful verification
+                    const mockAttestationId = `selfcore_attestation_${Date.now()}`;
                     const mockDiscloseOutput = {
-                      firstName: "Demo",
+                      firstName: "SelfCore",
                       lastName: "User"
                     };
                     handleVerificationSuccess(mockAttestationId, mockDiscloseOutput);
                   }}
-                  className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-8 rounded-lg transition-colors duration-300 text-lg"
-                >
-                  Simulate Verification
-                </button>
-              )}
-            </div>
+                  onError={(error: any) => {
+                    console.error("SelfCore verification failed:", error);
+                    setError("SelfCore verification failed. Please try again.");
+                  }}
+                />
+                
+                <div className="text-center">
+                  <p className="text-gray-400 mb-2">Or use this universal link:</p>
+                  {universalLink && (
+                    <a 
+                      href={universalLink}
+                      className="text-orange-400 hover:text-orange-300 underline break-all"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {universalLink}
+                    </a>
+                  )}
+                </div>
+
+                <div className="w-full border-t border-gray-600 my-6"></div>
+
+                {/* Demo Mode */}
+                <div className="w-full">
+                  <h3 className="text-xl font-semibold text-white mb-4 text-center">Demo Mode</h3>
+                  <p className="text-gray-300 text-center mb-4">For testing purposes, you can simulate verification without QR scanning</p>
+                  
+                  {loading ? (
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-400"></div>
+                      <p className="text-gray-300">Processing verification...</p>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <button
+                        onClick={() => {
+                          const mockAttestationId = `demo_attestation_${Date.now()}`;
+                          const mockDiscloseOutput = {
+                            firstName: "Demo",
+                            lastName: "User"
+                          };
+                          handleVerificationSuccess(mockAttestationId, mockDiscloseOutput);
+                        }}
+                        className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-8 rounded-lg transition-colors duration-300 text-lg"
+                      >
+                        Simulate Verification
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-400 mx-auto mb-4"></div>
+                <p className="text-gray-300">Generating QR code...</p>
+              </div>
+            )}
 
             <div className="mt-8 bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
               <h3 className="text-blue-400 font-medium mb-2">Instructions:</h3>
               <ol className="text-sm text-blue-300 space-y-1 text-left">
-                <li>1. Click "Simulate Verification" to test the flow</li>
-                <li>2. This will store your wallet address as verified</li>
-                <li>3. You can then create and accept services</li>
-                <li>4. In production, this would use SelfCore QR scanning</li>
+                <li>1. <strong>QR Code:</strong> Download Self app and scan the QR code above</li>
+                <li>2. <strong>Universal Link:</strong> Click the link above to open in Self app</li>
+                <li>3. <strong>Demo Mode:</strong> Click "Simulate Verification" for testing</li>
+                <li>4. Complete verification to use AnyEarn services</li>
               </ol>
             </div>
           </div>
