@@ -10,6 +10,7 @@ import ServiceCard from "./_components/ServiceCard";
 import MyServices from "./_components/MyServices";
 import AcceptedServices from "./_components/AcceptedServices";
 import GetUserLocation from "~~/components/GetUserLocation";
+import VerificationStatus from "~~/components/VerificationStatus";
 
 type Location = {
   latitude: number;
@@ -112,6 +113,11 @@ const ServicesPage: React.FC = () => {
 
           {address && (
             <>
+              {/* Verification Status */}
+              <div className="mb-8">
+                <VerificationStatus />
+              </div>
+
               {/* Browse Services Tab */}
               {activeTab === "browse" && (
                 <div>

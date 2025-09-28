@@ -2,12 +2,17 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./UserVerification.sol";
 
 /**
  * @title ServiceManager
  * @dev Manages services with start and end locations, allowing users to accept and track services
  */
 contract ServiceManager is Ownable {
+    
+    // Dependencies
+    UserVerification public userVerification;
+    address public serviceNFT;
     
     struct Location {
         int256 latitude;   // Latitude in degrees * 10^6 (to avoid floating point)
@@ -73,7 +78,10 @@ contract ServiceManager is Ownable {
         address indexed creator
     );
     
-    constructor() Ownable(msg.sender) {}
+    constructor(address _userVerification, address _serviceNFT) Ownable(msg.sender) {
+        userVerification = UserVerification(_userVerification);
+        serviceNFT = _serviceNFT;
+    }
     
     /**
      * @dev Create a new service
@@ -100,13 +108,36 @@ contract ServiceManager is Ownable {
         uint256 reward,
         uint256 deadline
     ) external payable returns (uint256) {
+        require(userVerification.isUserVerified(msg.sender), "User must be verified to create services");
         require(bytes(title).length > 0, "Title cannot be empty");
         require(bytes(description).length > 0, "Description cannot be empty");
         require(deadline > block.timestamp, "Deadline must be in the future");
         require(msg.value >= reward, "Insufficient payment for reward");
         
+        // Mint NFT representing the service
+        (bool success, bytes memory data) = serviceNFT.call(
+            abi.encodeWithSignature(
+                "mintServiceNFT(address,string,string,int256,int256,string,int256,int256,string,uint256,uint256)",
+                msg.sender,
+                title,
+                description,
+                startLat,
+                startLon,
+                startAddress,
+                endLat,
+                endLon,
+                endAddress,
+                reward,
+                deadline
+            )
+        );
+        
+        require(success, "Failed to mint service NFT");
+        
+        uint256 tokenId = abi.decode(data, (uint256));
         uint256 serviceId = nextServiceId++;
         
+        // Store minimal service data for backward compatibility
         services[serviceId] = Service({
             id: serviceId,
             creator: msg.sender,
@@ -135,49 +166,39 @@ contract ServiceManager is Ownable {
             deadline
         );
         
-        return serviceId;
+        return tokenId; // Return NFT token ID instead of service ID
     }
     
     /**
-     * @dev Accept a service
-     * @param serviceId ID of the service to accept
+     * @dev Accept a service NFT
+     * @param tokenId Token ID of the service NFT to accept
      */
-    function acceptService(uint256 serviceId) external {
-        Service storage service = services[serviceId];
-        require(service.id != 0, "Service does not exist");
-        require(service.status == ServiceStatus.Active, "Service is not active");
-        require(service.creator != msg.sender, "Cannot accept your own service");
-        require(block.timestamp <= service.deadline, "Service deadline has passed");
+    function acceptService(uint256 tokenId) external {
+        require(userVerification.isUserVerified(msg.sender), "User must be verified to accept services");
         
-        service.status = ServiceStatus.Accepted;
-        service.acceptedBy = msg.sender;
-        service.acceptedAt = block.timestamp;
+        // Accept the service NFT (this will transfer ownership to the accepter)
+        (bool success,) = serviceNFT.call(
+            abi.encodeWithSignature("acceptServiceNFT(uint256,address)", tokenId, msg.sender)
+        );
         
-        acceptedServices[msg.sender].push(serviceId);
+        require(success, "Failed to accept service NFT");
         
-        emit ServiceAccepted(serviceId, msg.sender, service.creator);
+        emit ServiceAccepted(tokenId, msg.sender, address(0)); // Creator will be retrieved from NFT
     }
     
     /**
-     * @dev Complete a service (only by the accepter)
-     * @param serviceId ID of the service to complete
+     * @dev Complete a service NFT (only by the accepter)
+     * @param tokenId Token ID of the service NFT to complete
      */
-    function completeService(uint256 serviceId) external {
-        Service storage service = services[serviceId];
-        require(service.id != 0, "Service does not exist");
-        require(service.acceptedBy == msg.sender, "Only accepter can complete service");
-        require(service.status == ServiceStatus.Accepted, "Service must be accepted first");
-        require(!service.completed, "Service already completed");
+    function completeService(uint256 tokenId) external payable {
+        // Complete and burn the service NFT (this will transfer reward to the accepter)
+        (bool success,) = serviceNFT.call{value: msg.value}(
+            abi.encodeWithSignature("completeAndBurnServiceNFT(uint256)", tokenId)
+        );
         
-        service.status = ServiceStatus.Completed;
-        service.completed = true;
+        require(success, "Failed to complete service NFT");
         
-        // Transfer reward to accepter
-        if (service.reward > 0) {
-            payable(msg.sender).transfer(service.reward);
-        }
-        
-        emit ServiceCompleted(serviceId, msg.sender, service.creator, service.reward);
+        emit ServiceCompleted(tokenId, msg.sender, address(0), 0); // Details will be retrieved from NFT
     }
     
     /**
@@ -246,6 +267,149 @@ contract ServiceManager is Ownable {
         }
         
         return result;
+    }
+    
+    /**
+     * @dev Get user's verification information
+     * @param userAddress Address of the user
+     */
+    function getUserInfo(address userAddress) external view returns (
+        bool isVerified,
+        string memory fullName,
+        string memory attestationId,
+        uint256 verifiedAt
+    ) {
+        if (userVerification.isUserVerified(userAddress)) {
+            UserVerification.VerifiedUser memory user = userVerification.getVerifiedUser(userAddress);
+            return (
+                true,
+                string(abi.encodePacked(user.firstName, " ", user.lastName)),
+                user.attestationId,
+                user.verifiedAt
+            );
+        } else {
+            return (false, "", "", 0);
+        }
+    }
+    
+    /**
+     * @dev Get service data from NFT
+     * @param tokenId Token ID of the service NFT
+     */
+    function getServiceDataFromNFT(uint256 tokenId) external view returns (
+        uint256 id,
+        address creator,
+        string memory title,
+        string memory description,
+        int256 startLat,
+        int256 startLon,
+        string memory startAddress,
+        int256 endLat,
+        int256 endLon,
+        string memory endAddress,
+        uint256 reward,
+        uint256 deadline,
+        address acceptedBy,
+        bool completed,
+        bool burned,
+        uint256 createdAt,
+        uint256 acceptedAt,
+        uint256 completedAt
+    ) {
+        (bool success, bytes memory data) = serviceNFT.staticcall(
+            abi.encodeWithSignature("getServiceData(uint256)", tokenId)
+        );
+        
+        require(success, "Failed to get service data from NFT");
+        
+        // Decode the returned data
+        return abi.decode(data, (
+            uint256, address, string, string,
+            int256, int256, string, int256, int256, string,
+            uint256, uint256, address, bool, bool,
+            uint256, uint256, uint256
+        ));
+    }
+    
+    /**
+     * @dev Get service locations from NFT
+     * @param tokenId Token ID of the service NFT
+     */
+    function getServiceLocationsFromNFT(uint256 tokenId) external view returns (
+        int256 startLat,
+        int256 startLon,
+        string memory startAddress,
+        int256 endLat,
+        int256 endLon,
+        string memory endAddress
+    ) {
+        (bool success, bytes memory data) = serviceNFT.staticcall(
+            abi.encodeWithSignature("getServiceLocations(uint256)", tokenId)
+        );
+        
+        require(success, "Failed to get service locations from NFT");
+        
+        // Decode the returned data
+        return abi.decode(data, (int256, int256, string, int256, int256, string));
+    }
+    
+    /**
+     * @dev Get active services from NFT contract
+     */
+    function getActiveServicesFromNFT() external view returns (uint256[] memory) {
+        (bool success, bytes memory data) = serviceNFT.staticcall(
+            abi.encodeWithSignature("getActiveServices()")
+        );
+        
+        require(success, "Failed to get active services from NFT");
+        
+        return abi.decode(data, (uint256[]));
+    }
+    
+    /**
+     * @dev Get user's services from NFT contract
+     * @param user Address of the user
+     */
+    function getUserServicesFromNFT(address user) external view returns (uint256[] memory) {
+        (bool success, bytes memory data) = serviceNFT.staticcall(
+            abi.encodeWithSignature("getUserServices(address)", user)
+        );
+        
+        require(success, "Failed to get user services from NFT");
+        
+        return abi.decode(data, (uint256[]));
+    }
+    
+    /**
+     * @dev Get user's accepted services from NFT contract
+     * @param user Address of the user
+     */
+    function getAcceptedServicesFromNFT(address user) external view returns (uint256[] memory) {
+        (bool success, bytes memory data) = serviceNFT.staticcall(
+            abi.encodeWithSignature("getAcceptedServices(address)", user)
+        );
+        
+        require(success, "Failed to get accepted services from NFT");
+        
+        return abi.decode(data, (uint256[]));
+    }
+    
+    /**
+     * @dev Update the user verification contract address (only owner)
+     * @param _userVerification New user verification contract address
+     */
+    function setUserVerification(address _userVerification) external onlyOwner {
+        require(_userVerification != address(0), "Invalid verification contract address");
+        userVerification = UserVerification(_userVerification);
+    }
+    
+    /**
+     * @dev Update the service NFT contract address (only owner)
+     * @param _serviceNFT New service NFT contract address
+     */
+    function setServiceNFT(address _serviceNFT) external onlyOwner {
+        require(_serviceNFT != address(0), "Invalid service NFT contract address");
+        serviceNFT = _serviceNFT;
     }
     
     /**
